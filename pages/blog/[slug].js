@@ -1,5 +1,6 @@
 import { getPostBySlug, getAllSlugs } from 'lib/api'
 import { extractText } from 'lib/extract-text'
+import { prevNextPost } from "lib/prev-next-post";
 import Meta from 'components/meta'
 import Container from 'components/container'
 import PostHeader from 'components/post-header'
@@ -7,6 +8,7 @@ import PostBody from 'components/post-body'
 import { TwoColumn, TwoColumnMain, TwoColumnSidebar } from "components/two-column";
 import ConvertBody from 'components/convert-body'
 import PostCategories from 'components/post-categories'
+import Pagination from 'components/pagination'
 import Image from 'next/image'
 import { eyecatchLocal } from "lib/constants";
 
@@ -17,7 +19,13 @@ export default function Post({
   eyecatch,
   categories,
   description,
+  prevPost,
+  nextPost,
 }) {
+  console.log(prevPost.slug);
+  console.log(nextPost.slug);
+  console.log(prevPost.title);
+  console.log(nextPost.title);
   return (
     <Container>
       <Meta
@@ -33,6 +41,7 @@ export default function Post({
 
         <figure>
           <Image
+            key={eyecatch.url}
             src={eyecatch.url}
             alt=""
             layout="responsive"
@@ -53,6 +62,13 @@ export default function Post({
             <PostCategories categories={categories} />
           </TwoColumnSidebar>
         </TwoColumn>
+
+        <Pagination
+          prevText={prevPost.title}
+          prevUrl={`/blog/${prevPost.slug}`}
+          nextText={nextPost.title}
+          nextUrl={`/blog/${nextPost.slug}`}
+        />
       </article>
     </Container>
   )
@@ -72,6 +88,8 @@ export async function getStaticProps(context) {
   const post = await getPostBySlug(slug)
   const description = extractText(post.content)
   const eyecatch = post.eyecatch ?? eyecatchLocal
+  const allSlugs = await getAllSlugs()
+  const [prevPost,nextPost] = prevNextPost(allSlugs, slug)
 
   return {
     props: {
@@ -81,6 +99,8 @@ export async function getStaticProps(context) {
       eyecatch: eyecatch,
       categories: post.categories,
       description: description,
+      prevPost: prevPost,
+      nextPost: nextPost,
     }
   }
 }
